@@ -2,6 +2,7 @@
 import logging
 from typing import Dict, List, Optional
 
+from app.query_builder.parsers import RequestParserFactory
 from app.utils.errors import QueryBuildError
 
 # Setup logging
@@ -26,17 +27,33 @@ class FlexibleQueryBuilder:
         self.offset_value = None
         self.joins = []
 
-        # Temporarily keep the original parse_request_params and build_query methods
-        # We'll replace these with calls to other modules as we extract them
+        # Create parser factory
+        self.parser_factory = RequestParserFactory()
 
     def parse_request_params(self, params: Dict[str, str]) -> None:
         """Parse request parameters into SQL query components."""
-        # Temporary placeholder that will use the original implementation
-        # This will be replaced with calls to parser modules later
-        pass
+        try:
+            # Process each parameter using appropriate parser
+            for key, value in params.items():
+                parser = self.parser_factory.get_parser(key)
+                if parser:
+                    parser.parse(key, value, self)
+
+            # If no select fields specified, use * as default
+            if not self.select_fields:
+                self.select_fields = [f"{self.base_alias}.*"]
+
+            # Field analysis and join determination will be added later
+
+        except ValueError as e:
+            # Handle numeric conversion errors
+            raise QueryBuildError(f"Invalid numeric value: {str(e)}")
+        except Exception as e:
+            # Handle other parsing errors
+            logger.error(f"Error parsing parameters: {e}", exc_info=True)
+            raise QueryBuildError(f"Error parsing query parameters: {str(e)}")
 
     def build_query(self) -> str:
         """Build the complete SQL query."""
-        # Temporary placeholder that will use the original implementation
         # This will be replaced with calls to constructor modules later
         pass
