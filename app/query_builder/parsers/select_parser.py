@@ -1,7 +1,8 @@
 """SELECT clause parser for the flexible query builder."""
-from typing import Any, List
+from typing import Any
 
 from app.query_builder.parsers.base import ParserInterface
+from app.query_builder.utils.formatting import split_and_trim
 from app.utils.constants import FIELD_MAPPINGS
 
 
@@ -14,9 +15,8 @@ class SelectParser(ParserInterface):
 
     def parse(self, key: str, value: str, builder: Any) -> None:
         """Parse a SELECT parameter and update the builder state."""
-        fields = value.split(',')
+        fields = split_and_trim(value)
         for field in fields:
-            field = field.strip()
             # Map to actual field name if exists in mapping
             if field in FIELD_MAPPINGS:
                 builder.select_fields.append(FIELD_MAPPINGS[field])
