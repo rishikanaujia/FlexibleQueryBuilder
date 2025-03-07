@@ -3,6 +3,7 @@ import logging
 from typing import Dict, List, Optional
 
 from app.query_builder.parsers import RequestParserFactory
+from app.query_builder.analyzers import FieldAnalyzer, JoinAnalyzer
 from app.utils.errors import QueryBuildError
 
 # Setup logging
@@ -27,8 +28,10 @@ class FlexibleQueryBuilder:
         self.offset_value = None
         self.joins = []
 
-        # Create parser factory
+        # Create helper objects
         self.parser_factory = RequestParserFactory()
+        self.field_analyzer = FieldAnalyzer()
+        self.join_analyzer = JoinAnalyzer()
 
     def parse_request_params(self, params: Dict[str, str]) -> None:
         """Parse request parameters into SQL query components."""
@@ -43,7 +46,16 @@ class FlexibleQueryBuilder:
             if not self.select_fields:
                 self.select_fields = [f"{self.base_alias}.*"]
 
-            # Field analysis and join determination will be added later
+            # Analyze fields to determine required joins
+            field_dependencies = self.field_analyzer.analyze_fields(
+                self.select_fields,
+                self.where_conditions,
+                self.group_by_fields,
+                self.order_by_clauses
+            )
+
+            # Determine required joins based on field dependencies
+            self.joins = self.join_analyzer.determine_joins(field_dependencies)
 
         except ValueError as e:
             # Handle numeric conversion errors
