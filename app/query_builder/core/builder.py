@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from app.query_builder.parsers import RequestParserFactory
 from app.query_builder.analyzers import FieldAnalyzer, JoinAnalyzer
+from app.query_builder.constructors import SQLQueryConstructor
 from app.utils.errors import QueryBuildError
 
 # Setup logging
@@ -32,6 +33,7 @@ class FlexibleQueryBuilder:
         self.parser_factory = RequestParserFactory()
         self.field_analyzer = FieldAnalyzer()
         self.join_analyzer = JoinAnalyzer()
+        self.sql_constructor = SQLQueryConstructor(schema, base_table, base_alias)
 
     def parse_request_params(self, params: Dict[str, str]) -> None:
         """Parse request parameters into SQL query components."""
@@ -67,5 +69,18 @@ class FlexibleQueryBuilder:
 
     def build_query(self) -> str:
         """Build the complete SQL query."""
-        # This will be replaced with calls to constructor modules later
-        pass
+        # Use the SQL constructor to build the query
+        query = self.sql_constructor.build_query(
+            select_fields=self.select_fields,
+            where_conditions=self.where_conditions,
+            group_by_fields=self.group_by_fields,
+            order_by_clauses=self.order_by_clauses,
+            limit_value=self.limit_value,
+            offset_value=self.offset_value,
+            joins=self.joins
+        )
+
+        # Log the query for debugging
+        logger.info(f"Generated query: {query}")
+
+        return query
